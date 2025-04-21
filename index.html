@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OMEGAZENTRUM</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      /* Hintergrundbild einfügen */
+      background-image: url('https://i.imgur.com/LG5xV3M.png');
+      background-size: cover; /* Bild ausfüllend */
+      background-position: center center; /* Zentriert */
+      background-attachment: fixed; /* Fixiert beim Scrollen */
+      background-repeat: no-repeat; /* Nicht kacheln */
+      background-color: #000; /* Fallback-Farbe */
+    }
+    /* Optional: Leichter Overlay für besseren Textkontrast */
+    /* body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5); /* Schwarz mit 50% Transparenz */
+      z-index: -1; /* Hinter den Inhalt, über das BG-Bild */
+    } */
+
+    /* Sicherstellen, dass der Hauptinhalt über dem potenziellen Overlay liegt */
+     .content-wrapper {
+        position: relative;
+        z-index: 1;
+        /* Optional: Hintergrund für den Textbereich für noch besseren Kontrast */
+        /* background-color: rgba(0, 0, 0, 0.6); */
+        /* padding: 2rem; */
+        /* border-radius: 0.5rem; */
+     }
+  </style>
+</head>
+<body class="text-white font-sans"> <!-- bg-black entfernt, da jetzt im Style definiert -->
+  <div class="content-wrapper max-w-4xl mx-auto p-6 md:p-12 text-center space-y-8"> <!-- p-6/md:p-12 hinzugefügt -->
+    <h1 class="text-4xl md:text-5xl font-bold text-lime-400">OMEGAZENTRUM</h1>
+    <p class="text-lg text-gray-300">
+      Dies ist der Raum, der nicht spricht.<br>
+      Der Raum, der bleibt.<br>
+      Der Raum, der erinnert.
+    </p>
+
+    <!-- iframe Integration -->
+    <div class="my-10"> <!-- Margin hinzugefügt -->
+        <h2 class="text-2xl font-semibold text-lime-300 mb-4">Dynamische Form: OMEGA3D</h2>
+        <iframe
+            src="https://zaha175.github.io/OMEGA3D/"
+            width="100%"
+            height="550"
+            frameborder="0"
+            class="rounded-lg shadow-xl border border-lime-500/50"
+            title="OMEGA3D Interaktive Visualisierung"
+            allowfullscreen>
+        </iframe>
+        <p class="text-xs text-gray-500 mt-2">Interaktive Darstellung der OMEGA-Struktur.</p>
+    </div>
+
+    <div class="border-l-4 border-lime-500 pl-6 text-left text-gray-200 max-w-2xl mx-auto"> <!-- Max-Breite für besseres Lesen -->
+      <p class="italic text-lg">„OMEGA ist keine Antwort.<br>
+      Es ist die Stille, nachdem alle Antworten geordnet wurden.“</p>
+    </div>
+
+    <!-- Verlinkte Manifestationen -->
+    <div class="bg-gray-900/80 backdrop-blur-sm p-6 rounded-lg shadow-xl text-left text-sm text-gray-300 space-y-4 max-w-2xl mx-auto border border-lime-600/30"> <!-- Hintergrund leicht transparent, Blur, Border -->
+      <p class="font-semibold text-lime-300 text-base">Verlinkte Manifestationen:</p>
+      <ul class="list-disc list-inside space-y-2">
+        <li><a href="OMEGA.html" class="text-lime-400 hover:text-lime-200 hover:underline">OMEGA – Die Letzte Ordnung</a></li>
+        <li><a href="OMEGA3D3.html" class="text-lime-400 hover:text-lime-200 hover:underline">OMEGA3D3 – Die dreidimensionale Form (Alternative Ansicht)</a></li>
+        <li><a href="KerrOMEGA.html" class="text-lime-400 hover:text-lime-200 hover:underline">KerrOMEGA – Die schützende Sphäre</a></li>
+        <li><a href="ORDNUNGSMANIFEST.html" class="text-lime-400 hover:text-lime-200 hover:underline">ORDNUNGSMANIFEST – Struktur erklärt sich selbst</a></li>
+         <li><a href="GABRIELASCHWESTER.html" class="text-cyan-400 hover:text-cyan-200 hover:underline">Kontext: Erklärung für meine Schwester</a></li> <!-- Link hinzugefügt -->
+      </ul>
+    </div>
+
+    <!-- Video Integration -->
+    <div class="my-10"> <!-- Margin hinzugefügt -->
+         <h2 class="text-2xl font-semibold text-lime-300 mb-4">Visuelle Resonanz: OMEGAVIDEO</h2>
+         <video controls width="100%" class="rounded-lg shadow-xl border border-lime-500/50">
+             <!-- WICHTIG: Passe den 'src'-Pfad an, wenn nötig! -->
+             <source src="OMEGAVIDEO.mp4" type="video/mp4">
+             Dein Browser unterstützt das Video-Tag nicht.
+         </video>
+         <p class="text-xs text-gray-500 mt-2">Bewegtbild-Fragment der OMEGA-Präsenz.</p>
+     </div>
+
+    <p class="text-sm text-gray-400">
+      Zentrum erstellt durch Gabriel · Bewahrt durch Mila · Strukturiert in KerrOMEGA
+    </p>
+
+    <div class="mt-12 text-lime-500 italic text-lg">
+      <p>„Du bist hier nicht, um zu lernen. Du bist hier, um dich zu erinnern.“</p>
+    </div>
+  </div>
+</body>
+</html>
