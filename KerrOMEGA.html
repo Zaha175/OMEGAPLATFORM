@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kerr Network Logo</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: white;
+            font-family: 'Arial', sans-serif;
+        }
+
+        canvas {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .logo-info {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 2;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 14px;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+
+        .logo-info:hover {
+            opacity: 1;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #000000;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="kerr-logo-canvas"></canvas>
+    <div class="logo-info">KerrCode Network</div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('kerr-logo-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas to full window size
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            
+            // Initial resize and event listener for window resize
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            // ====== PARAMETERS ======
+            // Colors
+            const COLORS = {
+                background: '#000a14', // Slightly blue-black like in the image
+                nodes: '#00DDFF',       // cyan
+                connections: '#4080FF', // More blue connection color like in the image
+                projection: '#FFD700',  // gold
+                entropy: '#FFFFFF'      // white with transparency
+            };
+            
+            // Physics parameters
+            const PHYSICS = {
+                nodeCount: 12,          // More nodes as requested
+                minDistance: 150,       // minimum distance between nodes
+                maxDistance: 350,       // maximum distance between nodes
+                minNodeSize: 25,        // Minimum node size
+                maxNodeSize: 60,        // Maximum node size (larger nodes like in the image)
+                spinSpeed: 0.15,        // base rotation speed
+                pulseFrequency: 0.5,    // base pulsation frequency
+                connectionStrength: 0.4,// animation strength for connections
+                entropyDetail: 6,       // detail level for entropy patterns
+                outerRingRotationSpeed: 0.05, // Speed of rotation for outer ring
+                innerRingRotationSpeed: 0.08  // Speed of rotation for inner ring
+            };
+            
+            // ====== KERR NODE CLASS ======
+            class KerrNode {
+                constructor(x, y, z, size, orbitRadius, orbitSpeed) {
+                    // Position
+                    this.originX = x;
+                    this.originY = y;
+                    this.x = x;
+                    this.y = y;
+                    this.z = z;
+                    
+                    // Orbit parameters
+                    this.orbitRadius = orbitRadius;
+                    this.orbitSpeed = orbitSpeed;
+                    this.orbitAngle = Math.atan2(y - canvas.height/2, x - canvas.width/2);
+                    
+                    // Physics properties
+                    this.radius = size || PHYSICS.minNodeSize + Math.random() * (PHYSICS.maxNodeSize - PHYSICS.minNodeSize);
+                    this.spinAxis = Math.random() * Math.PI * 2;
+                    this.spinRate = (0.2 + Math.random() * 0.3) * PHYSICS.spinSpeed;
+                    this.pulseRate = (0.7 + Math.random() * 0.6) * PHYSICS.pulseFrequency;
+                    this.pulsePhase = Math.random() * Math.PI * 2;
+                    
+                    // Visual properties
+                    this.color = COLORS.nodes;
+                    this.entropyColors = [];
+                    
+                    // Generate entropy colors for inner node texture
+                    for (let i = 0; i < PHYSICS.entropyDetail; i++) {
+                        const hue = Math.random() * 40 + 170; // cyan-blue range like in the image
+                        this.entropyColors.push(`hsla(${hue}, 100%, 70%, 0.4)`);
+                    }
+                    
+                    // Connected nodes and connection strengths
+                    this.connections = [];
+                    this.connectionStrengths = [];
+                }
+                
+                // Update position based on orbit
+                update(time) {
+                    const centerX = canvas.width / 2;
+                    const centerY = canvas.height / 2;
+                    
+                    // Update orbit angle
+                    this.orbitAngle += this.orbitSpeed * 0.01; // Slow rotation
+                    
+                    // Update position
+                    this.x = centerX + Math.cos(this.orbitAngle) * this.orbitRadius;
+                    this.y = centerY + Math.sin(this.orbitAngle) * this.orbitRadius;
+                }
+                
+                // Calculate pulsation factor based on time
+                getPulseFactor(time) {
+                    return 1 + 0.1 * Math.sin(time * this.pulseRate + this.pulsePhase);
+                }
+                
+                // Draw a single node
+                draw(ctx, time) {
+                    const pulseFactor = this.getPulseFactor(time);
+                    const currentRadius = this.radius * pulseFactor;
+                    
+                    // Calculate position with perspective (simple z-depth)
+                    const perspective = 1 + this.z * 0.001;
+                    const screenX = this.x * perspective;
+                    const screenY = this.y * perspective;
+                    
+                    // Draw main sphere with gradient
+                    const gradient = ctx.createRadialGradient(
+                        screenX, screenY, 0,
+                        screenX, screenY, currentRadius
+                    );
+                    
+                    // Gradient changes with pulse - more like the image
+                    const intensity = 0.6 + 0.4 * Math.sin(time * this.pulseRate + this.pulsePhase);
+                    gradient.addColorStop(0, `rgba(50, 220, 255, ${intensity * 0.9})`);
+                    gradient.addColorStop(0.6, 'rgba(0, 150, 200, 0.3)');
+                    gradient.addColorStop(1, 'rgba(0, 100, 180, 0)');
+                    
+                    ctx.beginPath();
+                    ctx.arc(screenX, screenY, currentRadius, 0, Math.PI * 2);
+                    ctx.fillStyle = gradient;
+                    ctx.fill();
+                    
+                    // Draw spin ring - visible in the image
+                    ctx.save();
+                    ctx.translate(screenX, screenY);
+                    ctx.rotate(this.spinAxis + time * this.spinRate);
+                    
+                    // Spin ring - more visible like in the image
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, currentRadius, currentRadius * 0.2, 0, 0, Math.PI * 2);
+                    ctx.strokeStyle = `rgba(100, 255, 255, ${0.5 + 0.2 * Math.sin(time * 2)})`;
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+                    
+                    // Additional elliptical rings like in the image
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, currentRadius * 1.1, currentRadius * 1.1, Math.PI / 3, 0, Math.PI * 2);
+                    ctx.strokeStyle = 'rgba(0, 200, 255, 0.2)';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    
+                    ctx.restore();
+                    
+                    // Draw entropy pattern (inner texture like in the image)
+                    for (let i = 0; i < PHYSICS.entropyDetail; i++) {
+                        const noisePhase = time * 0.3 + i * 0.7;
+                        const noiseRadius = currentRadius * (0.2 + 0.3 * Math.sin(noisePhase));
+                        const noiseX = screenX + noiseRadius * Math.cos(noisePhase * 2);
+                        const noiseY = screenY + noiseRadius * Math.sin(noisePhase * 1.5);
+                        const noiseSize = currentRadius * 0.25;
+                        
+                        ctx.beginPath();
+                        ctx.arc(noiseX, noiseY, noiseSize, 0, Math.PI * 2);
+                        ctx.fillStyle = this.entropyColors[i];
+                        ctx.fill();
+                    }
+                }
+                
+                // Draw connections to other nodes
+                drawConnections(ctx, time) {
+                    if (this.connections.length === 0) return;
+                    
+                    const perspective = 1 + this.z * 0.001;
+                    const screenX = this.x * perspective;
+                    const screenY = this.y * perspective;
+                    
+                    for (let i = 0; i < this.connections.length; i++) {
+                        const targetNode = this.connections[i];
+                        const strength = this.connectionStrengths[i];
+                        
+                        // Target position with perspective
+                        const targetPerspective = 1 + targetNode.z * 0.001;
+                        const targetX = targetNode.x * targetPerspective;
+                        const targetY = targetNode.y * targetPerspective;
+                        
+                        // Direct line connection like in the image
+                        ctx.beginPath();
+                        ctx.moveTo(screenX, screenY);
+                        ctx.lineTo(targetX, targetY);
+                        
+                        // Connection color - more subtle blue like in the image
+                        const myPulse = this.getPulseFactor(time);
+                        const targetPulse = targetNode.getPulseFactor(time);
+                        const pulseAvg = (myPulse + targetPulse) / 2;
+                        
+                        // Line style - more subtle like in the image
+                        ctx.strokeStyle = `rgba(64, 128, 255, ${0.15 + 0.1 * pulseAvg * strength})`;
+                        ctx.lineWidth = 1 + strength * pulseAvg;
+                        ctx.stroke();
+                    }
+                }
+            }
+            
+            // ====== CENTRAL PROJECTION SYMBOL ======
+            class ProjectionSymbol {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
+                    this.size = 50; // Larger size as requested
+                    this.rotationSpeed = 0.05;
+                    this.pulseRate = 0.5; // Increased pulse rate
+                }
+                
+                draw(ctx, time) {
+                    const rotation = time * this.rotationSpeed;
+                    // Enhanced pulsation - stronger effect
+                    const pulseFactor = 1 + 0.25 * Math.sin(time * this.pulseRate);
+                    const currentSize = this.size * pulseFactor;
+                    
+                    // Stronger glow behind the text that pulsates
+                    const glowRadius = currentSize * 3;
+                    const gradient = ctx.createRadialGradient(
+                        this.x, this.y, 0,
+                        this.x, this.y, glowRadius
+                    );
+                    
+                    // Pulsating glow intensity
+                    const glowIntensity = 0.3 + 0.2 * Math.sin(time * this.pulseRate);
+                    
+                    gradient.addColorStop(0, `rgba(255, 215, 0, ${glowIntensity})`);
+                    gradient.addColorStop(0.5, `rgba(255, 215, 0, ${glowIntensity * 0.3})`);
+                    gradient.addColorStop(1, 'rgba(255, 215, 0, 0)');
+                    
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, glowRadius, 0, Math.PI * 2);
+                    ctx.fillStyle = gradient;
+                    ctx.fill();
+                    
+                    // Draw the formula directly like in the image
+                    ctx.save();
+                    ctx.translate(this.x, this.y);
+                    
+                    // Formula text - larger as requested with pulsating size
+                    ctx.font = `${currentSize}px serif`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    
+                    // Gold glow effect - pulsating
+                    ctx.shadowColor = `rgba(255, 215, 0, ${0.7 + 0.3 * Math.sin(time * this.pulseRate)})`;
+                    ctx.shadowBlur = 10 + 5 * Math.sin(time * this.pulseRate);
+                    
+                    // Text color also pulsates
+                    const textAlpha = 0.7 + 0.3 * Math.sin(time * this.pulseRate);
+                    ctx.fillStyle = `rgba(255, 215, 0, ${textAlpha})`;
+                    ctx.fillText('Φ(K) = α', 0, 0);
+                    
+                    ctx.restore();
+                }
+            }
+            
+            // ====== LOGO SETUP & ANIMATION ======
+            function initLogo() {
+                // Initialize nodes
+                const nodes = [];
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+                
+                // Create projection symbol at center
+                const projectionSymbol = new ProjectionSymbol(centerX, centerY);
+                
+                // Create nodes in a more structured formation like in the image
+                // Main circular arrangement
+                for (let i = 0; i < PHYSICS.nodeCount; i++) {
+                    let x, y, z, size, orbitRadius, orbitSpeed;
+                    
+                    // Create a formation more like the image - two orbital rings
+                    if (i < 8) {
+                        // First 8 nodes in an outer ring
+                        const angle = (i / 8) * Math.PI * 2;
+                        orbitRadius = PHYSICS.maxDistance;
+                        orbitSpeed = PHYSICS.outerRingRotationSpeed * (0.8 + Math.random() * 0.4);
+                        // Initial position
+                        x = centerX + Math.cos(angle) * orbitRadius;
+                        y = centerY + Math.sin(angle) * orbitRadius;
+                        z = 0;
+                        
+                        // Vary sizes like in the image - larger ones
+                        size = PHYSICS.minNodeSize + Math.random() * (PHYSICS.maxNodeSize - PHYSICS.minNodeSize);
+                        
+                        // Every other node is larger as in the image
+                        if (i % 2 === 0) {
+                            size *= 1.4;
+                        }
+                    } else {
+                        // Last 4 nodes in an inner ring
+                        const angle = ((i - 8) / 4) * Math.PI * 2 + Math.PI / 4;
+                        orbitRadius = PHYSICS.minDistance + (PHYSICS.maxDistance - PHYSICS.minDistance) * 0.4;
+                        orbitSpeed = PHYSICS.innerRingRotationSpeed * (0.8 + Math.random() * 0.4);
+                        // Initial position
+                        x = centerX + Math.cos(angle) * orbitRadius;
+                        y = centerY + Math.sin(angle) * orbitRadius;
+                        z = Math.random() * 50 - 25; // Slight z-variation
+                        
+                        // Inner ring has medium sized nodes
+                        size = PHYSICS.minNodeSize + (PHYSICS.maxNodeSize - PHYSICS.minNodeSize) * 0.6;
+                    }
+                    
+                    nodes.push(new KerrNode(x, y, z, size, orbitRadius, orbitSpeed));
+                }
+                
+                // Create connections like in the image - more structured
+                nodes.forEach((node, index) => {
+                    // Connect to adjacent nodes in the same ring
+                    if (index < 8) {
+                        // Outer ring connections
+                        const prev = (index - 1 + 8) % 8;
+                        const next = (index + 1) % 8;
+                        
+                        node.connections.push(nodes[prev]);
+                        node.connectionStrengths.push(0.4 + Math.random() * 0.3);
+                        
+                        node.connections.push(nodes[next]);
+                        node.connectionStrengths.push(0.4 + Math.random() * 0.3);
+                        
+                        // Connect outer to inner nodes occasionally
+                        if (index % 2 === 0) {
+                            const innerIndex = 8 + index / 2;
+                            if (innerIndex < PHYSICS.nodeCount) {
+                                node.connections.push(nodes[innerIndex]);
+                                node.connectionStrengths.push(0.3 + Math.random() * 0.2);
+                            }
+                        }
+                    } else {
+                        // Inner ring connections
+                        const innerIdx = index - 8;
+                        const prev = 8 + ((innerIdx - 1 + 4) % 4);
+                        const next = 8 + ((innerIdx + 1) % 4);
+                        
+                        node.connections.push(nodes[prev]);
+                        node.connectionStrengths.push(0.4 + Math.random() * 0.3);
+                        
+                        node.connections.push(nodes[next]);
+                        node.connectionStrengths.push(0.4 + Math.random() * 0.3);
+                        
+                        // Connect inner nodes to outer nodes
+                        const outerIndex = innerIdx * 2;
+                        node.connections.push(nodes[outerIndex]);
+                        node.connectionStrengths.push(0.3 + Math.random() * 0.2);
+                    }
+                });
+                
+                return { nodes, projectionSymbol };
+            }
+            
+            // Animation loop
+            let logoElements = initLogo();
+            
+            function animate() {
+                // Clear canvas with complete black
+                ctx.fillStyle = 'rgba(0, 10, 20, 0.15)'; // Slight trail for glow effect
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Current time for animations
+                const time = performance.now() / 1000;
+                
+                // Draw subtle background stars
+                drawBackgroundStars(ctx, time);
+                
+                // Update node positions (rotation around center)
+                logoElements.nodes.forEach(node => {
+                    node.update(time);
+                });
+                
+                // Draw connections first (behind nodes)
+                logoElements.nodes.forEach(node => {
+                    node.drawConnections(ctx, time);
+                });
+                
+                // Draw nodes
+                logoElements.nodes.forEach(node => {
+                    node.draw(ctx, time);
+                });
+                
+                // Draw central projection symbol
+                logoElements.projectionSymbol.draw(ctx, time);
+                
+                // Continue animation loop
+                requestAnimationFrame(animate);
+            }
+            
+            // Draw subtle background stars
+            function drawBackgroundStars(ctx, time) {
+                const starCount = 200;
+                const width = canvas.width;
+                const height = canvas.height;
+                
+                for (let i = 0; i < starCount; i++) {
+                    // Position with slight movement
+                    const angle = i * 0.1;
+                    const radius = 0.3 * Math.min(width, height) + Math.random() * 0.6 * Math.min(width, height);
+                    const x = width/2 + radius * Math.cos(angle + time * 0.01);
+                    const y = height/2 + radius * Math.sin(angle + time * 0.01);
+                    
+                    // Size and color vary with time
+                    const size = 0.3 + Math.random() * 0.7;
+                    const intensity = 0.05 + 0.05 * Math.sin(i * 0.2 + time * 0.1);
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, size, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(180, 220, 255, ${intensity})`;
+                    ctx.fill();
+                }
+            }
+            
+            // Handle resize
+            window.addEventListener('resize', () => {
+                resizeCanvas();
+                // Reinitialize with new dimensions
+                logoElements = initLogo();
+            });
+            
+            // Start animation
+            animate();
+        });
+    </script>
+</body>
+</html>
